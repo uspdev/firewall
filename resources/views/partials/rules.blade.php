@@ -26,11 +26,11 @@
                     @csrf
                     <input type="hidden" name="associated-rule-id" value="{{ $rule->associated_rule_id ?? ''}}">
                     <input type="hidden" name="descr" value="{{ $rule->descr ?? ''}}">
+
                     @if($rule->tipo == 'nat')
                     <input type="hidden" name="acao" value="atualizarNat">
                     @else
                     <input type="hidden" name="acao" value="atualizarFilter">
-
                     @endif
 
                     <button type="submit" name="submit" value="Atualizar">Atualizar</button>
@@ -43,4 +43,3 @@
         @endforeach
     </tbody>
 </table>
-

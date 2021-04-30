@@ -27,7 +27,7 @@
             </td>
             <td>
             {{ $rule->codpes }}</td>
-            <td>{{ $rule->descr2 ?? $rule->descr }}</td>
+            <td>{{ $rule->descttd ?? $rule->descr }}</td>
             <td>{{ $rule->source->address ?? '' }}</td>
             <td>
                 {{ $rule->destination->address ?? ''}}:{{ $rule->destination->port ?? '-' }}

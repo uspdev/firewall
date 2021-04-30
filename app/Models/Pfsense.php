@@ -10,22 +10,36 @@ class Pfsense extends Model
     use HasFactory;
     const remote_script = 'pfsense-config2';
 
-    public static function ListarRegras() {
+    /**
+     * Lista todas as regras
+     */
+    public static function ListarRegras()
+    {
         $config = SELF::obterConfig(true);
         $rules = Pfsense::toObj($config['nat']['rule']);
-        foreach($rules as &$rule) {
-            
-            $descr2 = \preg_split('/\s?\(|\)\s?/', $rule->descr);
-            if (count($descr2) == 3) {
-                list($rule->codpes,$rule->data, $rule->descr2) = $descr2;
-            } else {
-                list($rule->codpes,$rule->data, $rule->descr2) = ['','',null];
-            }
+        foreach ($rules as &$rule) {
+            // vamos separar a descrição nas suas partes [codpes,data,descrição]
+            list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
         }
-        //dd($rule->descr2);
         return $rules;
     }
 
+    /**
+     * Separa descrição em suas partes [codpes,data,descrição]
+     */
+    public static function tratarDescricao($descr)
+    {
+        $descttd = \preg_split('/\s?\(|\)\s?/', $descr);
+        if (count($descttd) == 3) {
+            return $descttd;
+        } else {
+            return ['', '', null];
+        }
+    }
+
+    /** 
+     * lista as regras de nat para um usuário
+     */
     public static function listarNat(string $codpes)
     {
         $config = SELF::obterConfig();
@@ -49,7 +63,7 @@ class Pfsense extends Model
         $out = [];
         foreach ($config['filter']['rule'] as &$rule) {
             // procura o codpes na descricao e exclui os automáticos
-            if (strpos($rule['descr'], $codpes) !== false &&  strpos($rule['descr'], 'NAT ') !== 0) {
+            if (strpos($rule['descr'], $codpes) !== false && strpos($rule['descr'], 'NAT ') !== 0) {
                 SELF::replaceDash($rule);
                 if (empty($rule['destination']['address'])) {
                     $rule['destination']['address'] = $rule['interface'];
