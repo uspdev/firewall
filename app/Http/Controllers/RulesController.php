@@ -10,7 +10,7 @@ class RulesController extends Controller
 {
     public function index()
     {
-        Gate::authorize('user');
+       // sem gate
 
         if (!($user = \Auth()->user())) {
             return view('nologin');
