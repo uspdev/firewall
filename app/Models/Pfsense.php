@@ -77,14 +77,15 @@ class Pfsense extends Model
 
     public static function atualizarNat($usr, $associated_rule_id)
     {
-        $log = array();
-        $log['ts'] = date('Y-m-d H:i:s');
-        $log['codpes'] = $usr->codpes;
-        $log['name'] = $usr->nome;
+        // dd($usr);
+        // $log = array();
+        // $log['ts'] = date('Y-m-d H:i:s');
+        // $log['codpes'] = $usr->codpes;
+        // $log['name'] = $usr->nome;
 
         //echo $associated_rule_id;exit;
         foreach (SELF::listarNat($usr->codpes) as $nat) {
-            if ($nat->associated_rule_id == $associated_rule_id) {
+            if (isset($nat->{'associated-rule-id'}) && $nat->{'associated-rule-id'} == $associated_rule_id) {
                 $log['target'] = $nat->destination->address . ':' . $nat->destination->port;
                 $log['prev_ip'] = $nat->source->address;
                 $log['new_ip'] = $usr->ip;
@@ -100,7 +101,7 @@ class Pfsense extends Model
         }
 
         foreach (SELF::listarFilter($usr->codpes) as $filter) {
-            if (!empty($filter->associated_rule_id) && $filter->associated_rule_id == $associated_rule_id) {
+            if (!empty($filter->{'associated-rule-id'}) && $filter->{'associated-rule-id'} == $associated_rule_id) {
                 $filter->source->address = $usr->ip;
                 $filter->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $filter->descr);
 
@@ -120,12 +121,12 @@ class Pfsense extends Model
             SELF::remote_script,
             base64_encode(serialize($param))
         );
-        echo json_encode($param);exit;
         exec($exec_string, $fw);
-        //Log::update($log);
-
+        // gerar log aqui ??
         // recarrega a configuração atualizada
         SELF::obterConfig(true);
+
+        return $fw;
     }
 
     public static function atualizarFilter($usr, $descr)

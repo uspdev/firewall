@@ -24,7 +24,7 @@
                 @if($rule->source->address != $user->ip)
                 <form method="POST" action="updateRules">
                     @csrf
-                    <input type="hidden" name="associated-rule-id" value="{{ $rule->associated_rule_id ?? ''}}">
+                    <input type="hidden" name="associated-rule-id" value="{{ $rule->{'associated-rule-id'} ?? ''}}">
                     <input type="hidden" name="descr" value="{{ $rule->descr ?? ''}}">
 
                     @if($rule->tipo == 'nat')
