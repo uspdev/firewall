@@ -20,10 +20,10 @@ class RulesController extends Controller
         $user->ip = $_SERVER['REMOTE_ADDR'];
 
         $rules = Pfsense::listarRegras($user->codpes);
-        $LastActivity = Activity::causedBy($user)->get()->last();
+        $lastActivity = Activity::causedBy($user)->get()->last();
 
         # vamos gerar log na primeira atividade do dia
-        if ($lastActivity && today()->diffInDays($LastActivity->created_at->startOfDay()) >= 1) {
+        if ($lastActivity && today()->diffInDays($lastActivity->created_at->startOfDay()) >= 1) {
             activity()->causedBy($user)->log('Primeira atividade do dia');
         }
 
