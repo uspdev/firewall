@@ -3,7 +3,7 @@
 $menu = [
     [
         'text' => '<i class="fas fa-history"></i> Logs',
-        'url' => 'history',
+        'url' => 'activities',
         'can' => 'admin'
     ],
     [

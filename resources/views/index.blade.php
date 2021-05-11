@@ -8,11 +8,9 @@
     Endereço IP atual: {{ $user->ip }}<br>
 </div>
 <br>
-<div class="h3">
-    {{ config('app.host') }}
-</div>
 @include('partials.rules')
-
+<br>
+@include('partials.activity')
 @endsection
 
 @section('javascripts_bottom')

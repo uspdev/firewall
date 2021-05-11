@@ -22,5 +22,5 @@ Route::post('logout', [LoginController::class, 'logout']);
 
 Route::get('/', [RulesController::class, 'index']);
 Route::post('updateRules', [RulesController::class, 'updateRules']);
-Route::get('history', [RulesController::class, 'history']);
+Route::get('activities', [RulesController::class, 'activities']);
 Route::get('allRules', [RulesController::class, 'allRules']);

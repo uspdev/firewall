@@ -32,11 +32,14 @@ class LoginController extends Controller
         $user->last_login = now();
         $user->save();
         Auth::login($user, true);
+        activity()->log('Login');
+
         return redirect('/');
     }
 
     public function logout()
     {
+        activity()->log('Logout');
         Auth::logout();
         return redirect('/');
     }

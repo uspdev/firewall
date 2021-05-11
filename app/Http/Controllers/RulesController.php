@@ -5,30 +5,40 @@ namespace App\Http\Controllers;
 use App\Models\Pfsense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use \Spatie\Activitylog\Models\Activity;
 
 class RulesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-       // sem gate
+        // sem gate
 
         if (!($user = \Auth()->user())) {
             return view('nologin');
         }
+
         $user->ip = $_SERVER['REMOTE_ADDR'];
 
-        $rules = collect(Pfsense::listarNat($user->codpes));
-        $rules = $rules->merge(Pfsense::listarFilter($user->codpes));
-        //dd($rules);
-        return view('index', compact('user', 'rules'));
+        $rules = Pfsense::listarRegras($user->codpes);
+        $LastActivity = Activity::causedBy($user)->get()->last();
+
+        # vamos gerar log na primeira atividade do dia
+        if (today()->diffInDays($LastActivity->created_at->startOfDay()) >= 1) {
+            activity()->causedBy($user)->log('Primeira atividade do dia');
+        }
+
+        $activities = Activity::orderBy('created_at', 'DESC')->causedBy($user)->take(20)->get();
+
+        return view('index', compact('user', 'rules', 'activities'));
     }
 
     public function allRules()
     {
         Gate::authorize('admin');
 
-        $rules = Pfsense::listarRegras();
-        return view('allRules', compact('rules'));
+        return view('allRules', [
+            'rules' => Pfsense::listarRegras(),
+        ]);
     }
 
     public function updateRules(Request $request)
@@ -50,6 +60,16 @@ class RulesController extends Controller
                 }
                 break;
         }
+
         return redirect('');
+    }
+
+    public function activities()
+    {
+        Gate::authorize('admin');
+
+        return view('atividades', [
+            'activities' => Activity::orderBy('created_at', 'DESC')->get(),
+        ]);
     }
 }

@@ -1,6 +1,8 @@
-<table class="table table-stripped table-sm table-bordered">
+<div class="h4">Regras de acesso</div>
+<table class="table table-stripped table-sm table-bordered table-hover">
     <thead>
         <tr>
+            <td>Atualização</td>
             <td>Origem</td>
             <td>Destino</td>
             <td>Alvo</td>
@@ -12,6 +14,7 @@
         {{-- @dd($rules) --}}
         @foreach($rules as $rule)
         <tr>
+            <td>{{ $rule->data->format('d/m/Y') }}</td>
             <td>{{ $rule->source->address }}</td>
             <td>{{ $rule->destination->address ?? ''}}:{{ $rule->destination->port ?? '-' }}</td>
             <td>
@@ -19,7 +22,7 @@
                 {{ $rule->target }}:{{ $rule->{'local-port'} ?? ''}}
                 @endif
             </td>
-            <td>{{ $rule->descr }}</td>
+            <td>{{ $rule->descttd }}</td>
             <td>
                 @if($rule->source->address != $user->ip)
                 <form method="POST" action="updateRules">
@@ -33,10 +36,10 @@
                     <input type="hidden" name="acao" value="atualizarFilter">
                     @endif
 
-                    <button type="submit" name="submit" value="Atualizar">Atualizar</button>
+                    <button type="submit" name="submit" class="btn btn-sm btn-primary" value="Atualizar">Atualizar</button>
                 </form>
                 @else
-                Acesso liberado
+                <span class="badge badge-success">Acesso liberado</span>
                 @endif
             </td>
         </tr>
