@@ -23,7 +23,7 @@ class RulesController extends Controller
         $LastActivity = Activity::causedBy($user)->get()->last();
 
         # vamos gerar log na primeira atividade do dia
-        if (today()->diffInDays($LastActivity->created_at->startOfDay()) >= 1) {
+        if ($lastActivity && today()->diffInDays($LastActivity->created_at->startOfDay()) >= 1) {
             activity()->causedBy($user)->log('Primeira atividade do dia');
         }
 
