@@ -2,7 +2,11 @@
 
 @section('content')
 
-<h3>Todas as regras @include('partials.datatable-filter')</h3>
+<div class="h4 form-inline">
+    Todas as regras
+    <span class="badge badge-pill badge-primary datatable-counter ml-2">-</span>
+    @include('partials.datatables-filterbox')
+</div>
 
 <table class="table table-stripped table-sm table-bordered regras">
     <thead>
@@ -20,7 +24,7 @@
         {{-- @dd($rules) --}}
         @foreach($rules as $rule)
         <tr>
-            <td style="white-space: nowrap;">
+            <td data-sort="{{ $rule->data }}" style="white-space: nowrap;">
                 {{ $rule->data ? $rule->data->format('d/m/Y') : '' }}
             </td>
             <td>{{ $rule->codpes }}</td>
@@ -57,6 +61,10 @@
                 [0, "desc"]
             ]
         })
+
+        // vamos renderizar o contador de linhas
+        $('.datatable-counter').html(oTable.page.info().recordsDisplay)
+
     })
 
 </script>
