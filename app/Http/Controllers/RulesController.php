@@ -13,10 +13,11 @@ class RulesController extends Controller
     {
         // sem gate
 
-        if (!($user = \Auth()->user())) {
+        if (!Gate::allows('user')) {
             return view('nologin');
         }
 
+        $user = \Auth()->user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
 
         $rules = Pfsense::listarRegras($user->codpes);
@@ -52,12 +53,7 @@ class RulesController extends Controller
                 Pfsense::atualizarNat($user, $request['associated-rule-id']);
                 break;
             case 'atualizarFilter':
-                Pfsense::atualizarFilter($user, $request['descr']);
-                break;
-            case 'obterConfig':
-                if ($user->level == 'admin') {
-                    Pfsense::obterConfig(true);
-                }
+                Pfsense::atualizarFilter($user, $request['tracker']);
                 break;
         }
 

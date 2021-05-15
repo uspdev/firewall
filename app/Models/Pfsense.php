@@ -16,19 +16,132 @@ class Pfsense extends Model
      */
     public static function ListarRegras(String $codpes = null)
     {
-        if (!$codpes) {
-            $config = SELF::obterConfig(true);
-            $rules = collect(SELF::toObj($config['nat']['rule']));
+        if ($codpes) {
+            $rules = SELF::listarNat($codpes);
+            $rules = $rules->merge(SELF::listarFilter($codpes));
+        } else {
+            $rules = collect(SELF::obterConfig(true)->nat->rule);
             foreach ($rules as &$rule) {
                 // vamos separar a descrição nas suas partes [codpes,data,descrição]
                 list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
             }
-        } else {
-            $rules = SELF::listarNat($codpes);
-            $rules = $rules->merge(SELF::listarFilter($codpes));
+        }
+        return $rules;
+    }
+
+    /**
+     * lista as regras de nat para um usuário
+     */
+    protected static function listarNat(string $codpes, $formatado = true)
+    {
+        $out = collect();
+
+        foreach (SELF::obterConfig()->nat->rule as $rule) {
+
+            // procura o codpes na descricao
+            if (strpos($rule->descr, $codpes) !== false) {
+
+                # vamos formatar os dados para exibição
+                if ($formatado) {
+                    list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
+                    $rule->tipo = 'nat';
+                }
+                $out->push($rule);
+            }
+        }
+        return $out;
+    }
+
+    protected static function listarFilter(string $codpes, $formatado = true, $automaticos = false)
+    {
+        $out = collect();
+
+        foreach (SELF::obterConfig()->filter->rule as $rule) {
+
+            if ($automaticos) {
+                # procura o codpes na descrição
+                $condicao = strpos($rule->descr, $codpes) !== false;
+            } else {
+                # procura o codpes na descricao e exclui os automáticos (automáticos começam com 'NAT ')
+                $condicao = strpos($rule->descr, $codpes) !== false && strpos($rule->descr, 'NAT ') !== 0;
+            }
+
+            if ($condicao) {
+                if ($formatado) {
+                    list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
+                    if (empty($rule->destination->address)) {
+                        $rule->destination->address = $rule->interface;
+                    }
+                    $rule->tipo = 'filter';
+                }
+
+                $out->push($rule);
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Atualiza regras de NAT
+     */
+    public static function atualizarNat($user, $associated_rule_id)
+    {
+        foreach (SELF::listarNat($user->codpes, false) as $nat) {
+            if (isset($nat->{'associated-rule-id'}) && $nat->{'associated-rule-id'} == $associated_rule_id) {
+                $nat->source->address = $user->ip;
+                $nat->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $nat->descr);
+                $param['nat'] = SELF::objToArray($nat);
+                break; # ao encontrar vamos parar pois tem somente um
+            }
         }
 
-        return $rules;
+        # tem de atualizar também a regra de filter associada ao NAT
+        foreach (SELF::listarFilter($user->codpes, false, true) as $filter) {
+            if (isset($filter->{'associated-rule-id'}) && $filter->{'associated-rule-id'} == $associated_rule_id) {
+                $filter->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $filter->descr);
+                $filter->source->address = $user->ip;
+                $param['filter'] = SELF::objToArray($filter);
+                break; # ao encontrar vamos parar pois tem somente um
+            }
+        }
+
+        $param['key'] = 'associated-rule-id'; # chave para busca no caso de nat
+        $exec_return = SELF::aplicarAtualizacao($param);
+        activity()->causedBy($user)->withProperties(['descr' => $nat->descr, 'exec' => $exec_return])->log('Regra nat atualizada');
+    }
+
+    /**
+     * Atualiza regras filter que não são NAT
+     */
+    public static function atualizarFilter($user, $tracker)
+    {
+        foreach (SELF::listarFilter($user->codpes, false) as $filter) {
+            if ($filter->tracker == $tracker) {
+                $filter->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $filter->descr);
+                $filter->source->address = $user->ip;
+                $param['filter'] = SELF::objToArray($filter);
+                break; # ao encontrar vamos parar pois tem somente um
+            }
+        }
+
+        $param['key'] = 'tracker'; # chave para busca no caso de filter
+        $exec_return = SELF::aplicarAtualizacao($param);
+        activity()->causedBy($user)->withProperties(['descr' => $filter->descr, 'exec' => $exec_return])->log('Regra filter atualizada');
+    }
+
+    /**
+     * Obtém o config do firewall remoto
+     *
+     * Guarda na sessão, atualiza a sessão caso $atualizar = true
+     */
+    public static function obterConfig($atualizar = false)
+    {
+        if ($atualizar || empty($_SESSION['pf_config'])) {
+            exec('ssh ' . config('firewall.ssh') . ' pfSsh.php playback pc-getConfig', $pf_config);
+            $_SESSION['pf_config'] = json_decode($pf_config[0], true);
+        }
+
+        return SELF::toObj($_SESSION['pf_config']);
     }
 
     /**
@@ -46,144 +159,22 @@ class Pfsense extends Model
     }
 
     /**
-     * lista as regras de nat para um usuário
+     * Aplica as regras no firewall remoto e obtém as configurações atualizadas
      */
-    protected static function listarNat(string $codpes)
+    protected static function aplicarAtualizacao($param)
     {
-        $config = SELF::obterConfig();
-
-        $out = collect();
-        foreach ($config['nat']['rule'] as $rule) {
-            $rule = SELF::toObj($rule);
-            list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
-
-            // procura o codpes na descricao
-            if ($rule->codpes == $codpes) {
-                $rule->tipo = 'nat';
-                $out->push($rule);
-            }
-        }
-        return $out;
-    }
-
-    protected static function listarFilter(string $codpes)
-    {
-        $config = SELF::obterConfig();
-        $out = collect();
-
-        foreach ($config['filter']['rule'] as $rule) {
-            $rule = SELF::toObj($rule);
-            list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
-
-            // procura o codpes na descricao e exclui os automáticos
-            if ($rule->codpes == $codpes && strpos($rule->descr, 'NAT ') !== 0) {
-                if (empty($rule->destination->address)) {
-                    $rule->destination->address = $rule->interface;
-                }
-                $rule->tipo = 'filter';
-                $out->push($rule);
-            }
-        }
-        return $out;
-        return SELF::toObj($out);
-    }
-
-    /**
-     * Atualiza regras de NAT
-     */
-    public static function atualizarNat($user, $associated_rule_id)
-    {
-        foreach (SELF::listarNat($user->codpes) as $nat) {
-            if (isset($nat->{'associated-rule-id'}) && $nat->{'associated-rule-id'} == $associated_rule_id) {
-                $nat->source->address = $user->ip;
-
-                # atualizando a data na descr da regra
-                $nat->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $nat->descr);
-
-                $param['nat'] = SELF::objToArray($nat);
-                break;
-            }
-        }
-
-        foreach (SELF::listarFilter($user->codpes) as $filter) {
-            if (!empty($filter->{'associated-rule-id'}) && $filter->{'associated-rule-id'} == $associated_rule_id) {
-                $filter->source->address = $user->ip;
-                $filter->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $filter->descr);
-
-                $param['filter'] = SELF::objToArray($filter);
-                break;
-            }
-        }
-
-        // chave para busca no caso de nat
-        $param['key'] = 'associated-rule-id';
-
         $exec_string = sprintf(
             'ssh %s pfSsh.php playback %s nat %s',
             config('firewall.ssh'),
             SELF::remote_script,
             base64_encode(serialize($param))
         );
-        exec($exec_string, $fw);
-
-        activity()->causedBy($user)->withProperties(['descr' => $nat->descr])->log('Regra nat atualizada');
+        exec($exec_string, $exec_return);
 
         // recarrega a configuração atualizada
         SELF::obterConfig(true);
 
-        return $fw;
-    }
-
-    /**
-     * Atualiza regras filter que não são NAT
-     */
-    public static function atualizarFilter($user, $descr)
-    {
-        $log = array();
-        $log['ts'] = date('Y-m-d H:i:s');
-        $log['codpes'] = $user->codpes;
-        $log['name'] = $user->nome;
-
-        foreach (SELF::listarFilter($user->codpes) as $filter) {
-            if ($filter->descr == $descr) {
-                $log['target'] = $filter->destination->address;
-                $log['prev_ip'] = $filter->source->address;
-                $log['new_ip'] = $user->ip;
-
-                $filter->descr = preg_replace("/\(.*?\)/", "(" . date('Y-m-d') . ")", $filter->descr);
-                $filter->source->address = $user->ip;
-
-                $filter = SELF::objToArray($filter);
-                $param['filter'] = $filter;
-                break;
-            }
-        }
-
-        // chave para busca no caso de filter
-        $param['key'] = 'tracker';
-
-        $exec_string = sprintf(
-            'ssh %s pfSsh.php playback %s filter %s',
-            config('firewall.ssh'),
-            SELF::remote_script,
-            base64_encode(serialize($param))
-        );
-        exec($exec_string, $fw);
-
-        activity()->causedBy($user)->withProperties(['descr' => $descr])->log('Regra filter atualizada');
-
-        // recarrega a configuração atualizada
-        SELF::obterConfig(true);
-    }
-
-    public static function obterConfig($atualizar = false)
-    {
-        if ($atualizar || empty($_SESSION['pf_config'])) {
-            exec('ssh ' . config('firewall.ssh') . ' pfSsh.php playback pc-getConfig', $pf_config);
-            $_SESSION['pf_config'] = json_decode($pf_config[0], true);
-        }
-
-        return $_SESSION['pf_config'];
+        return $exec_return;
     }
 
     protected static function toObj($arr)

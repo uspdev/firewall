@@ -27,13 +27,13 @@
                 @if($rule->source->address != $user->ip)
                 <form method="POST" action="updateRules">
                     @csrf
-                    <input type="hidden" name="associated-rule-id" value="{{ $rule->{'associated-rule-id'} ?? ''}}">
-                    <input type="hidden" name="descr" value="{{ $rule->descr ?? ''}}">
 
                     @if($rule->tipo == 'nat')
                     <input type="hidden" name="acao" value="atualizarNat">
+                    <input type="hidden" name="associated-rule-id" value="{{ $rule->{'associated-rule-id'} ?? ''}}">
                     @else
                     <input type="hidden" name="acao" value="atualizarFilter">
+                    <input type="hidden" name="tracker" value="{{ $rule->tracker ?? ''}}">
                     @endif
 
                     <button type="submit" name="submit" class="btn btn-sm btn-primary" value="Atualizar">Atualizar</button>

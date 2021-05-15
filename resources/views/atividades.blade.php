@@ -15,17 +15,18 @@
             <th>nome</th>
             <th>Registro</th>
             <th>Descrição</th>
-            <th>Agente</th>
+            <th>Propriedades</th>
         </tr>
     </thead>
     @forelse($activities as $activity)
+    @php $prop = $activity->properties; unset($prop['descr']); @endphp
     <tr>
         <td data-sort="{{ $activity->created_at }}" style="white-space: nowrap;">{{ $activity->created_at->format('d/m/Y H:i:s') }}</td>
         <td>{{ $activity->causer->codpes }}</td>
         <td>{{ $activity->causer->name }}</td>
         <td>{{ $activity->description }}</td>
         <td>{{ $activity->getExtraProperty('descr') }}</td>
-        <td>{{ json_encode($activity->getExtraProperty('agent')) }}</td>
+        <td> {{ $prop }}</td>
     </tr>
     @empty
     @endforelse
