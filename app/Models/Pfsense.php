@@ -148,7 +148,7 @@ class Pfsense extends Model
     /**
      * Separa descrição em suas partes [codpes, data, descrição]
      */
-    protected static function tratarDescricao($descr)
+    public static function tratarDescricao($descr)
     {
         $descttd = \preg_split('/\s?\(|\)\s?/', $descr);
         if (count($descttd) == 3) {
