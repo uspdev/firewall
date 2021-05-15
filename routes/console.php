@@ -20,12 +20,12 @@ Artisan::command('inspire', function () {
 
 Artisan::command('atualizarRemotos', function () {
     if (!config('firewall.ssh')) {
-        die('Configure no .env a variável pfsense_ssh'.PHP_EOL);
+        die('Configure no .env a variável pfsense_ssh' . PHP_EOL);
     }
     $path = base_path('resources/pfsense');
     exec('tail -n +2 ' . $path . '/pfsense-config3.php > ' . $path . '/pfsense-config3');
     exec('scp ' . $path . '/pfsense-config3 ' . config('firewall.ssh') . ':/etc/phpshellsessions/pfsense-config3');
     exec('rm ' . $path . '/pfsense-config3');
-    echo 'Remotos atualizados';
+    echo 'Remotos atualizados' . PHP_EOL;
 
 })->purpose('Modifica e copia o arquivo para pfsense');
