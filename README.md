@@ -19,3 +19,5 @@ Procedimento de deploy padrão para Laravel
 * senha única
 * migrations
 * etc
+
+rodar `php artisan atualizarRemotos`

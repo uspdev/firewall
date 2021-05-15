@@ -9,7 +9,6 @@ use \Carbon\Carbon;
 class Pfsense extends Model
 {
     use HasFactory;
-    const remote_script = 'pfsense-config2';
 
     /**
      * Lista todas as regras ou por codpes
@@ -106,7 +105,8 @@ class Pfsense extends Model
         }
 
         $param['key'] = 'associated-rule-id'; # chave para busca no caso de nat
-        $exec_return = SELF::aplicarAtualizacao($param);
+        $exec_return = SELF::aplicarAtualizacao('nat', $param);
+        SELF::obterConfig(true);
         activity()->causedBy($user)->withProperties(['descr' => $nat->descr, 'exec' => $exec_return])->log('Regra nat atualizada');
     }
 
@@ -125,7 +125,8 @@ class Pfsense extends Model
         }
 
         $param['key'] = 'tracker'; # chave para busca no caso de filter
-        $exec_return = SELF::aplicarAtualizacao($param);
+        $exec_return = SELF::aplicarAtualizacao('filter', $param);
+        SELF::obterConfig(true);
         activity()->causedBy($user)->withProperties(['descr' => $filter->descr, 'exec' => $exec_return])->log('Regra filter atualizada');
     }
 
@@ -137,7 +138,7 @@ class Pfsense extends Model
     public static function obterConfig($atualizar = false)
     {
         if ($atualizar || empty($_SESSION['pf_config'])) {
-            exec('ssh ' . config('firewall.ssh') . ' pfSsh.php playback pc-getConfig', $pf_config);
+            $pf_config = SELF::aplicarAtualizacao('config');
             $_SESSION['pf_config'] = json_decode($pf_config[0], true);
         }
 
@@ -161,18 +162,18 @@ class Pfsense extends Model
     /**
      * Aplica as regras no firewall remoto e obtém as configurações atualizadas
      */
-    protected static function aplicarAtualizacao($param)
+    protected static function aplicarAtualizacao($acao, $param = [])
     {
+        $remote_script = 'pfsense-config3';
+
         $exec_string = sprintf(
-            'ssh %s pfSsh.php playback %s nat %s',
+            'ssh %s pfSsh.php playback %s %s %s',
             config('firewall.ssh'),
-            SELF::remote_script,
+            $remote_script,
+            $acao,
             base64_encode(serialize($param))
         );
         exec($exec_string, $exec_return);
-
-        // recarrega a configuração atualizada
-        SELF::obterConfig(true);
 
         return $exec_return;
     }
