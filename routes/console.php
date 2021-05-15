@@ -26,5 +26,6 @@ Artisan::command('atualizarRemotos', function () {
     exec('tail -n +2 ' . $path . '/pfsense-config3.php > ' . $path . '/pfsense-config3');
     exec('scp ' . $path . '/pfsense-config3 ' . config('firewall.ssh') . ':/etc/phpshellsessions/pfsense-config3');
     exec('rm ' . $path . '/pfsense-config3');
+    echo 'Remotos atualizados';
 
 })->purpose('Modifica e copia o arquivo para pfsense');
