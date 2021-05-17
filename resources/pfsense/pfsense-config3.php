@@ -10,14 +10,14 @@
  * - como chamar: ssh user@pfsense_ip pfSsh.php playback <acao> [param]
  */
 
-require_once "globals.inc";
-require_once "filter.inc";
-require_once "util.inc";
-require_once "config.inc";
-require_once "functions.inc";
+#require_once "globals.inc";
+#require_once "filter.inc";
+#require_once "util.inc";
+#require_once "config.inc";
+#require_once "functions.inc";
 global $config;
 global $argv;
-parse_config(true);
+//parse_config(true);
 
 if (empty($argv[3])) {
     die('sem acao');
