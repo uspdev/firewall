@@ -14,7 +14,7 @@
         {{-- @dd($rules) --}}
         @foreach($rules as $rule)
         <tr>
-            <td>{{ $rule->data->format('d/m/Y') }}</td>
+            <td>{{ $rule->data ? $rule->data->format('d/m/Y') : '' }}</td>
             <td>{{ $rule->source->address }}</td>
             <td>{{ $rule->destination->address ?? ''}}:{{ $rule->destination->port ?? '-' }}</td>
             <td>
