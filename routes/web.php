@@ -15,11 +15,6 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
-
-Route::get('login', [LoginController::class, 'redirectToProvider'])->name('login');
-Route::get('callback', [LoginController::class, 'handleProviderCallback']);
-Route::post('logout', [LoginController::class, 'logout']);
-
 Route::get('/', [RulesController::class, 'index']);
 Route::post('updateRules', [RulesController::class, 'updateRules']);
 Route::get('activities', [RulesController::class, 'activities']);
