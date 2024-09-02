@@ -4,6 +4,7 @@
 
 @section('content')
 
+
 <div class="h3">
     Endereço IP atual: {{ $user->ip }}<br>
 </div>
