@@ -19,7 +19,6 @@ class RulesController extends Controller
 
         $user = \Auth()->user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
-
         $rules = Pfsense::listarRegras($user->codpes);
         $lastActivity = Activity::causedBy($user)->get()->last();
 
