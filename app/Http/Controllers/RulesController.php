@@ -19,8 +19,7 @@ class RulesController extends Controller
 
         $user = \Auth()->user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
-        $rules = [];
-        //$rules = Pfsense::listarRegras($user->codpes);
+        $rules = Pfsense::listarRegras($user->codpes);
         $lastActivity = Activity::causedBy($user)->get()->last();
 
         # vamos gerar log na primeira atividade do dia
