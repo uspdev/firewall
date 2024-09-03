@@ -14,7 +14,3 @@
 @include('partials.activity')
 @endsection
 
-@section('javascripts_bottom')
-@parent
-{{-- Seu código .js --}}
-@endsection
