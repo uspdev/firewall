@@ -11,8 +11,6 @@ class RulesController extends Controller
 {
     public function index(Request $request)
     {
-        // sem gate
-
         if (!Gate::allows('user')) {
             return view('nologin');
         }
