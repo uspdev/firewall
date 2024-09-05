@@ -34,7 +34,7 @@ class Pfsense extends Model
     }
 
     /**
-     * Retorna o o status e mensagem obtida com a tentativa de conexão ao servidor fornecido
+     * Retorna o o status obtido com a tentativa de conexão ao servidor fornecido
      * 
      * True: Conexão estabelecida
      * False: Erro de SSH
@@ -218,7 +218,6 @@ class Pfsense extends Model
     {
         if ($atualizar || empty($_SESSION['pf_config'])) {
             $pf_config = SELF::aplicarAtualizacao('config');
-            //return $pf_config;
             $_SESSION['pf_config'] = json_decode($pf_config[0], true);
         }
 

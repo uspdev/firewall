@@ -23,9 +23,9 @@ class RulesController extends Controller
         if($connectionStatus['status']){
             $rules = Pfsense::listarRegras($user->codpes);
         } else{
-            $rules = [];
-            $errorString =  "<script>alert(\"Impossível acessar o servidor SSH: " . $connectionStatus['msg'] . "\")</script>";
-            echo $errorString;
+            return view('conectividade', [
+                'msg' =>  "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
+            ]);
         }
         $lastActivity = Activity::causedBy($user)->get()->last();
 
@@ -42,10 +42,17 @@ class RulesController extends Controller
     public function allRules()
     {
         Gate::authorize('admin');
-
-        return view('allRules', [
-            'rules' => Pfsense::listarRegras(),
-        ]);
+        $connectionStatus = Pfsense::status();
+        if($connectionStatus['status']){
+            return view('allRules', [
+                'rules' => Pfsense::listarRegras(),
+            ]);
+        } else{
+            return view('conectividade', [
+                'msg' =>  "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
+            ]);
+        }
+        
     }
 
     public function updateRules(Request $request)
