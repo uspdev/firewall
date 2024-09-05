@@ -5,10 +5,89 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use \Carbon\Carbon;
+use Illuminate\Support\Str;
+
 
 class Pfsense extends Model
 {
     use HasFactory;
+
+    /**
+     * Retorna o código de retorno da conexão com o IP fornecido
+     * 
+     * True: Conexão pode ser estabelecida
+     * False: Host down
+     * 
+     * @return Boolean
+     */
+    protected static function testarIP($enderecoIP)
+    {
+        $comando = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
+
+        exec($comando, $saida, $codigoDeRetorno);
+
+        if ($codigoDeRetorno === 0) {
+            return true; 
+        } else {
+            return false; 
+        }
+    }
+
+    /**
+     * Retorna o o status e mensagem obtida com a tentativa de conexão ao servidor fornecido
+     * 
+     * True: Conexão estabelecida
+     * False: Erro de SSH
+     * 
+     * @return Integer
+     */
+    protected static function testarConectividade($ssh)
+    {
+        $exec_string = sprintf('ssh %s', $ssh);
+        exec($exec_string, $exec_return, $return_var);
+
+        if ($return_var === 0) {
+            return true; 
+        } else {
+            return false; 
+        }
+    }
+
+    /**
+     * Retorna o status da comunicação com o pfsense
+     * 
+     * True: Tudo certo
+     * Erro no .env
+     * Host down
+     * Erro de SSH
+     * Erro no pfsense - não implementado
+     * 
+     * @return Array [status => true|false, msg => '']
+     */
+    public static function status()
+    {   
+        $ssh = config('firewall.ssh');
+        $resultado = true;
+        if(empty($ssh)){
+            $resultado = [
+                'status' => false,
+                'msg'    => '.env error'
+            ];
+        }elseif(!Self::testarIP(Str::after($ssh, '@'))){
+            $resultado = [
+                'status' => false,
+                'msg'    => 'Host Down'
+            ];
+        }else{
+            if(!Self::testarConectividade($ssh)){
+                $resultado = [
+                    'status' => false,
+                    'msg'    => 'SSH Error' 
+                ];
+            }
+        }
+        return $resultado;
+    } 
 
     /**
      * Lista todas as regras ou por codpes
@@ -139,6 +218,7 @@ class Pfsense extends Model
     {
         if ($atualizar || empty($_SESSION['pf_config'])) {
             $pf_config = SELF::aplicarAtualizacao('config');
+            //return $pf_config;
             $_SESSION['pf_config'] = json_decode($pf_config[0], true);
         }
 
@@ -165,7 +245,7 @@ class Pfsense extends Model
     protected static function aplicarAtualizacao($acao, $param = [])
     {
         $remote_script = 'pfsense-config3';
-
+        
         $exec_string = sprintf(
             'ssh %s pfSsh.php playback %s %s %s',
             config('firewall.ssh'),

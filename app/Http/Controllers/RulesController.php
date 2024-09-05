@@ -19,7 +19,14 @@ class RulesController extends Controller
 
         $user = \Auth()->user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
-        $rules = Pfsense::listarRegras($user->codpes);
+        $connectionStatus = Pfsense::status();
+        if($connectionStatus['status']){
+            $rules = Pfsense::listarRegras($user->codpes);
+        } else{
+            $rules = [];
+            $errorString =  "<script>alert(\"Impossível acessar o servidor SSH: " . $connectionStatus['msg'] . "\")</script>";
+            echo $errorString;
+        }
         $lastActivity = Activity::causedBy($user)->get()->last();
 
         # vamos gerar log na primeira atividade do dia
