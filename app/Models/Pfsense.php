@@ -112,10 +112,14 @@ class Pfsense extends Model
             $rules = SELF::listarNat($codpes);
             $rules = $rules->merge(SELF::listarFilter($codpes));
         } else {
-            $rules = collect(SELF::obterConfig(true)->nat->rule);
-            foreach ($rules as &$rule) {
-                // vamos separar a descrição nas suas partes [codpes,data,descrição]
-                list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
+            if (!empty($config->nat->rule)) {
+                $rules = collect($config->nat->rule);
+                foreach ($rules as &$rule) {
+                    // vamos separar a descrição nas suas partes [codpes,data,descrição]
+                    list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
+                }
+            } else {
+                $rules = collect();
             }
         }
         return $rules;
@@ -157,7 +161,7 @@ class Pfsense extends Model
         if (!isset($config->filter->rule)) {
             return collect();
         }
-        
+
         foreach (SELF::obterConfig()->filter->rule as $rule) {
 
             if ($automaticos) {
