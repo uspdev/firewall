@@ -39,4 +39,5 @@ Gerar e configurar chave SSH
 3. Configurar o caminho da chave privada
 
     Abra o arquivo .env em seu projeto e verifique o caminho indicado na variável pfsense_private_key
-    Copie ambas as chaves para o caminho indicado
+    Copie ambas as chaves para o caminho indicado dentro da pasta storage e renomeie como 'acesso-pfsense'.
+    (padrão /firewall/storage/app)
