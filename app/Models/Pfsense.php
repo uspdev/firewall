@@ -7,11 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use \Carbon\Carbon;
 use Illuminate\Support\Str;
 
-use function PHPUnit\Framework\isEmpty;
-
 class Pfsense extends Model
 {
     use HasFactory;
+
+    // protected $ssh_params = sprintf(
+    //     '-i %s  -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2',
+    //     config('firewall.private_key'),
+    //     storage_path('app/known_hosts')
+    // );
 
     /**
      * Retorna o código de retorno da conexão com o IP fornecido
@@ -26,11 +30,11 @@ class Pfsense extends Model
         $comando = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
 
         exec($comando, $saida, $codigoDeRetorno);
-        
+
         if ($codigoDeRetorno === 0) {
-            return true; 
+            return true;
         } else {
-            return false; 
+            return false;
         }
     }
 
@@ -44,13 +48,18 @@ class Pfsense extends Model
      */
     protected static function testarConectividade($ssh)
     {
-        $exec_string = sprintf("ssh -tt -F /dev/null -i %s -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s true 2>&1", config('firewall.private_key'), storage_path('app/known_hosts'), $ssh);
+        $exec_string = sprintf(
+            "ssh -tt -F /dev/null -i %s -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s true 2>&1",
+            config('firewall.private_key'),
+            storage_path('app/known_hosts'),
+            $ssh
+        );
         exec($exec_string, $output, $return_var);
-        
+
         if ($return_var === 0) {
-            return true; 
+            return true;
         } else {
-            return false; 
+            return false;
         }
     }
 
@@ -66,29 +75,29 @@ class Pfsense extends Model
      * @return Array [status => true|false, msg => '']
      */
     public static function status()
-    {   
+    {
         $ssh = config('firewall.ssh');
         $resultado['status'] = true;
-        if(empty($ssh)){
+        if (empty($ssh)) {
             $resultado = [
                 'status' => false,
                 'msg'    => '.env error'
             ];
-        }elseif(!Self::testarIP(Str::after($ssh, '@'))){
+        } elseif (!Self::testarIP(Str::after($ssh, '@'))) {
             $resultado = [
                 'status' => false,
                 'msg'    => 'Host Down'
             ];
-        }else{
-            if(!Self::testarConectividade($ssh)){
+        } else {
+            if (!Self::testarConectividade($ssh)) {
                 $resultado = [
                     'status' => false,
-                    'msg'    => 'SSH Error' 
+                    'msg'    => 'SSH Error'
                 ];
             }
         }
         return $resultado;
-    } 
+    }
 
     /**
      * Lista todas as regras ou por codpes
@@ -96,9 +105,9 @@ class Pfsense extends Model
     public static function ListarRegras(String $codpes = null)
     {
         $config = SELF::obterConfig(true);
-        if (!isset($config->nat->rules)) {
-            return collect();
-        }
+        // if (!isset($config->nat->rules)) {
+        //     return collect();
+        // }
         if ($codpes) {
             $rules = SELF::listarNat($codpes);
             $rules = $rules->merge(SELF::listarFilter($codpes));
@@ -233,7 +242,7 @@ class Pfsense extends Model
     {
         if ($atualizar || empty($_SESSION['pf_config'])) {
             $pf_config = SELF::aplicarAtualizacao('config');
-            if (isEmpty($pf_config)) {
+            if (empty($pf_config)) {
                 $pf_config[0] = null;
             }
             $_SESSION['pf_config'] = json_decode($pf_config[0], true);
@@ -262,15 +271,17 @@ class Pfsense extends Model
     protected static function aplicarAtualizacao($acao, $param = [])
     {
         $remote_script = 'pfsense-config3';
-        
+
         $exec_string = sprintf(
-            'ssh %s pfSsh.php playback %s %s %s',
+            'ssh -i %s  -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s pfSsh.php playback %s %s %s', // 2>&1
+            config('firewall.private_key'),
+            storage_path('app/known_hosts'),
             config('firewall.ssh'),
             $remote_script,
             $acao,
             base64_encode(serialize($param))
-        );        
-        exec($exec_string, $exec_return);
+        );
+        exec($exec_string, $exec_return, $exec_code);
 
         return $exec_return;
     }
