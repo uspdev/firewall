@@ -24,7 +24,7 @@ Artisan::command('atualizarRemotos', function () {
     }
     $path = base_path('resources/pfsense');
     exec('tail -n +2 ' . $path . '/pfsense-config3.php > ' . $path . '/pfsense-config3');
-    exec('scp ' . $path . '/pfsense-config3 ' . config('firewall.ssh') . ':/etc/phpshellsessions/pfsense-config3');
+    exec('scp -i ' . storage_path('firewall.private_key') . ' '. $path . '/pfsense-config3 ' . config('firewall.ssh') . ':/etc/phpshellsessions/pfsense-config3');
     exec('rm ' . $path . '/pfsense-config3');
     echo 'Remotos atualizados' . PHP_EOL;
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use \Carbon\Carbon;
 use Illuminate\Support\Str;
 
+use function PHPUnit\Framework\isEmpty;
 
 class Pfsense extends Model
 {
@@ -25,7 +26,7 @@ class Pfsense extends Model
         $comando = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
 
         exec($comando, $saida, $codigoDeRetorno);
-
+        
         if ($codigoDeRetorno === 0) {
             return true; 
         } else {
@@ -43,9 +44,9 @@ class Pfsense extends Model
      */
     protected static function testarConectividade($ssh)
     {
-        $exec_string = sprintf('ssh %s', $ssh);
-        exec($exec_string, $exec_return, $return_var);
-
+        $exec_string = sprintf("ssh -tt -F /dev/null -i %s -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s true 2>&1", config('firewall.private_key'), storage_path('app/known_hosts'), $ssh);
+        exec($exec_string, $output, $return_var);
+        
         if ($return_var === 0) {
             return true; 
         } else {
@@ -67,7 +68,7 @@ class Pfsense extends Model
     public static function status()
     {   
         $ssh = config('firewall.ssh');
-        $resultado = true;
+        $resultado['status'] = true;
         if(empty($ssh)){
             $resultado = [
                 'status' => false,
@@ -94,6 +95,10 @@ class Pfsense extends Model
      */
     public static function ListarRegras(String $codpes = null)
     {
+        $config = SELF::obterConfig(true);
+        if (!isset($config->nat->rules)) {
+            return collect();
+        }
         if ($codpes) {
             $rules = SELF::listarNat($codpes);
             $rules = $rules->merge(SELF::listarFilter($codpes));
@@ -113,6 +118,11 @@ class Pfsense extends Model
     protected static function listarNat(string $codpes, $formatado = true)
     {
         $out = collect();
+
+        $config = SELF::obterConfig();
+        if (!isset($config->nat->rules)) {
+            return collect();
+        }
 
         foreach (SELF::obterConfig()->nat->rule as $rule) {
 
@@ -134,6 +144,11 @@ class Pfsense extends Model
     {
         $out = collect();
 
+        $config = SELF::obterConfig();
+        if (!isset($config->filter->rule)) {
+            return collect();
+        }
+        
         foreach (SELF::obterConfig()->filter->rule as $rule) {
 
             if ($automaticos) {
@@ -218,6 +233,9 @@ class Pfsense extends Model
     {
         if ($atualizar || empty($_SESSION['pf_config'])) {
             $pf_config = SELF::aplicarAtualizacao('config');
+            if (isEmpty($pf_config)) {
+                $pf_config[0] = null;
+            }
             $_SESSION['pf_config'] = json_decode($pf_config[0], true);
         }
 
@@ -251,7 +269,7 @@ class Pfsense extends Model
             $remote_script,
             $acao,
             base64_encode(serialize($param))
-        );
+        );        
         exec($exec_string, $exec_return);
 
         return $exec_return;
