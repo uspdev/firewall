@@ -48,12 +48,19 @@ class Pfsense extends Model
      */
     protected static function testarConectividade($ssh)
     {
+        // $fileName = md5(file_get_contents(config('firewall.private_key')));
+        // $path = storage_path('tmp') . '/' . $fileName;
+
+        // copy(config('firewall.private_key'), $path);
+        // chmod($path, 0600);
+
         $exec_string = sprintf(
             "ssh -tt -F /dev/null -i %s -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s true 2>&1",
             config('firewall.private_key'),
             storage_path('app/known_hosts'),
             $ssh
         );
+
         exec($exec_string, $output, $return_var);
 
         if ($return_var === 0) {
