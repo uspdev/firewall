@@ -54,6 +54,7 @@ class Pfsense extends Model
             storage_path('app/known_hosts'),
             $ssh
         );
+
         exec($exec_string, $output, $return_var);
 
         if ($return_var === 0) {
