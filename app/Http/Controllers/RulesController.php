@@ -6,6 +6,7 @@ use App\Models\Pfsense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use \Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Auth;
 
 class RulesController extends Controller
 {
@@ -14,8 +15,7 @@ class RulesController extends Controller
         if (!Gate::allows('user')) {
             return view('nologin');
         }
-
-        $user = \Auth()->user();
+        $user = Auth::user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
         $connectionStatus = Pfsense::status();
         if($connectionStatus['status']){
@@ -57,7 +57,7 @@ class RulesController extends Controller
     {
         Gate::authorize('user');
 
-        $user = \Auth()->user();
+        $user = Auth::user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
         switch ($request->acao) {
             case 'atualizarNat':
