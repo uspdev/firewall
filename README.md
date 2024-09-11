@@ -6,12 +6,19 @@ Implementado para pfsense.
 
 O sistema precisa ter acesso ssh por chave no pfsense.
 
-Regras de nat:
-* descrição deve ser no formato "codpes () Texto de descrição". Dentro do parêntesis será colocado a data da alteração
-* orígem: host único ou alias. Colocar qualquer IP pois será alterado pelo sistema
-* destino: colocar os dados de destino, principalmente intervalo de portas (geralmente será personalizado, uma única porta)
-* dados do alvo: ip e porta do computador interno
-* Criar uma regra de filtro associada
+Como adicionar regras de nat:
+* Na página inicial do pfSense, clique em "nat" dentro do menu Firewall
+![Firewall > nat](docs/nat_step1.png)
+* Na tela seguinte, escolha o primeiro botão circulado em vermelho se quiser adicionar uma regra ao topo da lista ou o segundo botão se quiser adicionar ao fim
+![Botões "add"](docs/nat_step2.png)
+* Na tela de adionar regra, clique em "Display Advanced" no campo de "source"
+![Source > Display Advanced](docs/nat_step3.png)
+* Nos demais campos, certifique-se que seguem as mesmas especificações das imagens a seguir. Substitua 'ip-da-maquina' pelo ip da máquina que será utilizada
+![Especificações 1](docs/nat_step4-1.png)
+![Especificações 2](docs/nat_step4-2.png)
+* Após aplicadas as modificações, clique em "Save"
+* Na tela seguinte, clique em "Apply changes"
+![Botão "apply changes"](docs/nat_step6.png)
 
 Procedimento de deploy padrão para Laravel
 * senha única
