@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 
 class RulesController extends Controller
 {
+    /**
+     * Mostra a tela de entrada do usuário, com suas regras e seu registro de atividades.
+     */
     public function index(Request $request)
     {
         if (!Gate::allows('user')) {
@@ -32,11 +35,15 @@ class RulesController extends Controller
             activity()->causedBy($user)->log('Primeira atividade do dia');
         }
 
+        // vamos pegar as 20 ultimas atividades para mostrar para o usuário
         $activities = Activity::orderBy('created_at', 'DESC')->causedBy($user)->take(20)->get();
 
         return view('index', compact('user', 'rules', 'activities'));
     }
 
+    /**
+     * Mostra todas as regras de firewall/nat manipuláveis pelo sistema
+     */
     public function allRules()
     {
         Gate::authorize('admin');
@@ -53,6 +60,9 @@ class RulesController extends Controller
         
     }
 
+    /**
+     * Aplica um atualização de regra solicitada pelo usuário
+     */
     public function updateRules(Request $request)
     {
         Gate::authorize('user');
@@ -71,6 +81,9 @@ class RulesController extends Controller
         return redirect('');
     }
 
+    /**
+     * Mostra todo o registro de logs (activities)
+     */
     public function activities()
     {
         Gate::authorize('admin');
