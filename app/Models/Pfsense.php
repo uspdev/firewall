@@ -134,7 +134,7 @@ class Pfsense extends Model
         $out = collect();
 
         $config = SELF::obterConfig();
-        if (!isset($config->nat->rules)) {
+        if (!isset($config->nat->rule)) {
             return collect();
         }
 
