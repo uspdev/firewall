@@ -2,66 +2,30 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use \Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Pfsense extends Model
 {
     use HasFactory;
 
-    // protected $ssh_params = sprintf(
-    //     '-i %s  -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2',
-    //     config('firewall.private_key'),
-    //     storage_path('app/known_hosts')
-    // );
-
     /**
-     * Retorna o código de retorno da conexão com o IP fornecido
+     * Retorna parametros comuns para o ssh
      * 
-     * True: Conexão pode ser estabelecida
-     * False: Host down
-     * 
-     * @return Boolean
+     * -tt: orça alocar terminal
+     * -F /dev/null: indica null para config file
+     * -i: caminho para private key
      */
-    protected static function testarIP($enderecoIP)
+    protected static function sshParams()
     {
-        $comando = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
-
-        exec($comando, $saida, $codigoDeRetorno);
-
-        if ($codigoDeRetorno === 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Retorna o o status obtido com a tentativa de conexão ao servidor fornecido
-     * 
-     * True: Conexão estabelecida
-     * False: Erro de SSH
-     * 
-     * @return Integer
-     */
-    protected static function testarConectividade($ssh)
-    {
-        $exec_string = sprintf(
-            "ssh -tt -F /dev/null -i %s -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s true 2>&1",
+        return sprintf(
+            '-F /dev/null -i %s -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2',
             config('firewall.private_key'),
-            storage_path('app/known_hosts'),
-            $ssh
+            storage_path('app/known_hosts')
         );
-
-        exec($exec_string, $output, $return_var);
-
-        if ($return_var === 0) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**
@@ -78,50 +42,120 @@ class Pfsense extends Model
     public static function status()
     {
         $ssh = config('firewall.ssh');
-        $resultado['status'] = true;
+
         if (empty($ssh)) {
-            $resultado = [
-                'status' => false,
-                'msg'    => '.env error'
-            ];
-        } elseif (!Self::testarIP(Str::after($ssh, '@'))) {
-            $resultado = [
-                'status' => false,
-                'msg'    => 'Host Down'
-            ];
-        } else {
-            if (!Self::testarConectividade($ssh)) {
-                $resultado = [
-                    'status' => false,
-                    'msg'    => 'SSH Error'
-                ];
-            }
+            return ['status' => false, 'msg' => '.env error'];
         }
-        return $resultado;
+
+        if (!Self::testarIP(Str::after($ssh, '@'))) {
+            return ['status' => false, 'msg' => 'Host Down'];
+        }
+
+        if (!Self::testarConectividade()) {
+            return ['status' => false, 'msg' => 'SSH Error'];
+        }
+
+        return ['status' => true, 'msg' => ''];
+    }
+
+    /**
+     * Retorna o código de retorno da conexão com o IP fornecido
+     * 
+     * True: Conexão pode ser estabelecida
+     * False: Host down
+     * 
+     * @return Boolean
+     */
+    protected static function testarIP($enderecoIP)
+    {
+        $exec_string = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
+        exec($exec_string, $exec_output, $exec_code);
+
+        return ($exec_code === 0)  ? true : false;
+    }
+
+    /**
+     * Retorna o o status obtido com a tentativa de conexão ssh ao servidor fornecido
+     * 
+     * True: Conexão estabelecida
+     * False: Erro de SSH
+     * 
+     * @return Integer
+     */
+    protected static function testarConectividade()
+    {
+        $exec_string = sprintf('ssh %s %s true 2>&1', self::sshParams(), config('firewall.ssh'));
+        exec($exec_string, $exec_output, $exec_code);
+
+        if ($exec_code === 0) {
+            return true;
+        } else {
+            self::log($exec_string, $exec_output, $exec_code);
+            return false;
+        }
+    }
+
+    /**
+     * Grava em log especifico do pfsense a variável $msg
+     */
+    protected static function log(...$msg)
+    {
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/pfsense.log'),
+            'permission' => 0664,
+        ])->info(json_encode($msg));
+
+        return true;
+    }
+
+    /**
+     * Copia o arquivo de playback para o pfsense
+     */
+    public static function copiaPlaybackParaRemoto()
+    {
+        $path = base_path('resources/pfsense');
+
+        // remove a 1a. linha do arquivo pois não deve existir para executar corretamente no pfsense
+        exec('tail -n +2 ' . $path . '/pfsense-config3.php > ' . $path . '/pfsense-config3');
+
+        // copia o arquivo
+        $exec_string = strtr(
+            'scp {params} {src} {host}:/etc/phpshellsessions/pfsense-config3 2>&1',
+            [
+                '{params}' => self::sshParams(),
+                '{src}' => $path . '/pfsense-config3',
+                '{host}' => config('firewall.ssh')
+            ]
+        );
+        exec($exec_string, $return, $code);
+
+        // remove o arquivo temporario
+        exec('rm ' . $path . '/pfsense-config3');
+
+        self::log('Copiou playback: ' . $exec_string, $return, $code);
+        return ($code === 0) ? true : false;
     }
 
     /**
      * Lista todas as regras ou por codpes
      */
-    public static function ListarRegras(String $codpes = null)
+    public static function ListarRegras(int $codpes = null)
     {
         $config = SELF::obterConfig(true);
-        // if (!isset($config->nat->rules)) {
-        //     return collect();
-        // }
         if ($codpes) {
             $rules = SELF::listarNat($codpes);
-            $rules = $rules->merge(SELF::listarFilter($codpes));
-        } else {
-            if (!empty($config->nat->rule)) {
-                $rules = collect($config->nat->rule);
-                foreach ($rules as &$rule) {
-                    // vamos separar a descrição nas suas partes [codpes,data,descrição]
-                    list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
-                }
-            } else {
-                $rules = collect();
+            return $rules->merge(SELF::listarFilter($codpes));
+        }
+
+        if (!empty($config->nat->rule)) {
+            $rules = collect($config->nat->rule);
+            foreach ($rules as &$rule) {
+                // vamos separar a descrição nas suas partes [codpes,data,descrição]
+                list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
             }
+        } else {
+            $rules = collect();
         }
         return $rules;
     }
@@ -129,7 +163,7 @@ class Pfsense extends Model
     /**
      * lista as regras de nat para um usuário
      */
-    protected static function listarNat(string $codpes, $formatado = true)
+    protected static function listarNat(int $codpes, $formatado = true)
     {
         $out = collect();
 
@@ -154,6 +188,9 @@ class Pfsense extends Model
         return $out;
     }
 
+    /**
+     * Lista as regras de filter para um usuário
+     */
     protected static function listarFilter(string $codpes, $formatado = true, $automaticos = false)
     {
         $out = collect();
@@ -242,6 +279,8 @@ class Pfsense extends Model
      * Obtém o config do firewall remoto
      *
      * Guarda na sessão, atualiza a sessão caso $atualizar = true
+     * 
+     * TODO: talvez poderia guardar no cache do laravel, assim compartilha com todos os usuários
      */
     public static function obterConfig($atualizar = false)
     {
@@ -278,9 +317,8 @@ class Pfsense extends Model
         $remote_script = 'pfsense-config3';
 
         $exec_string = sprintf(
-            'ssh -i %s  -o UserKnownHostsFile=%s -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=2 %s pfSsh.php playback %s %s %s', // 2>&1
-            config('firewall.private_key'),
-            storage_path('app/known_hosts'),
+            'ssh %s %s pfSsh.php playback %s %s %s', // 2>&1
+            self::sshParams(),
             config('firewall.ssh'),
             $remote_script,
             $acao,
@@ -288,14 +326,29 @@ class Pfsense extends Model
         );
         exec($exec_string, $exec_return, $exec_code);
 
+        // vamos copiar o script remoto se necessário e rodar novamente
+        if (isset($exec_return[0]) && $exec_return[0] == 'Error: Invalid playback file specified.') {
+            self::copiaPlaybackParaRemoto();
+            unset($exec_return);
+            exec($exec_string, $exec_return, $exec_code); //roda novamente
+        }
+
         return $exec_return;
     }
 
-    protected static function toObj($arr)
+    /**
+     * Converte array para objeto
+     * 
+     * Deveria esta numa classe de utils???
+     */
+    protected static function toObj(Array $arr)
     {
         return json_decode(json_encode($arr));
     }
 
+    /**
+     * Converte objeto para Array
+     */
     protected static function objToArray($obj)
     {
         return json_decode(json_encode($obj), true);

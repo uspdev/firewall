@@ -18,6 +18,9 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+
+// esse codigo foi passado para a classe Pfsense e é executado automaticamente quando necessário
+// então possivelmente poderá ser removido daqui
 Artisan::command('atualizarRemotos', function () {
     if (!config('firewall.ssh')) {
         die('Configure no .env a variável pfsense_ssh' . PHP_EOL);
