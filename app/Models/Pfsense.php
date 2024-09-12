@@ -149,24 +149,36 @@ class Pfsense extends Model
     /**
      * Lista todas as regras ou por codpes
      */
-    public static function ListarRegras(int $codpes = null)
-    {
-        $config = SELF::obterConfig(true);
-        if ($codpes) {
-            $rules = SELF::listarNat($codpes);
-            return $rules->merge(SELF::listarFilter($codpes));
-        }
-
-        if (!empty($config->nat->rule)) {
-            $rules = collect($config->nat->rule);
-            foreach ($rules as &$rule) {
-                // vamos separar a descrição nas suas partes [codpes,data,descrição]
-                list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
-            }
-        } else {
-            $rules = collect();
-        }
-        return $rules;
+    public static function ListarRegras(int $codpes = null) 
+    { 
+        $config = SELF::obterConfig(true); 
+        if ($codpes) { 
+            $rules = SELF::listarNat($codpes); 
+            return $rules->merge(SELF::listarFilter($codpes)); 
+        } else { 
+            $rules = []; 
+            if (!empty($config->nat->rule)) { 
+                foreach ($config->nat->rule as &$rule) { 
+                    // vamos separar a descrição nas suas partes [codpes,data,descrição]                
+                    list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr); 
+                    $rule->tipo = 'nat'; 
+                    array_push($rules, $rule); 
+                } 
+            } 
+            if (!empty($config->filter->rule)) {                     
+                foreach ($config->filter->rule as &$rule) { 
+                    list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr); 
+                    if (empty($rule->destination->address)) { 
+                        $rule->destination->address = $rule->interface; 
+                    } 
+                    $rule->tipo = 'filter'; 
+                    if (!isset($rule->{'associated-rule-id'})) { 
+                        array_push($rules, $rule); 
+                    } 
+                } 
+            }    
+        } 
+        return $rules; 
     }
 
     /**
