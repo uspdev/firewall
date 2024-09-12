@@ -18,11 +18,13 @@
             <th>Destino</th>
             <th>Alvo</th>
             <th>Criação da regra</th>
+            <th>Tipo</th>
         </tr>
     </thead>
     <tbody>
         {{-- @dd($rules) --}}
         @foreach($rules as $rule)
+        @if ($rule->codpes!="")
         <tr>
             <td data-sort="{{ $rule->data }}" style="white-space: nowrap;">
                 {{ $rule->data ? $rule->data->format('d/m/Y') : '' }}
@@ -34,7 +36,9 @@
                 {{ $rule->destination->address ?? ''}}:{{ $rule->destination->port ?? '-' }}
             </td>
             <td>
-                {{ $rule->target }}:{{ $rule->{'local-port'} ?? ''}}
+                @if($rule->tipo == 'nat')  
+                    {{ $rule->target }}:{{ $rule->{'local-port'} ?? ''}}
+                @endif
             </td>
             <td>
                 @if(!empty($rule->updated))
@@ -42,7 +46,9 @@
                 em {{ date('d/m/Y', $rule->updated->time) }}
                 @endif
             </td>
+            <td>{{ $rule->tipo }}</td> 
         </tr>
+        @endif
         @endforeach
     </tbody>
 </table>
