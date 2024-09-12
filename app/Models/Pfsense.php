@@ -178,7 +178,6 @@ class Pfsense extends Model
                 }
             }
         }
-        // dd($rules);
         return $rules;
     }
 
