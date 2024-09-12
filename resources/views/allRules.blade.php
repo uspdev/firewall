@@ -24,7 +24,6 @@
     <tbody>
         {{-- @dd($rules) --}}
         @foreach($rules as $rule)
-        @if ($rule->codpes!="")
         <tr>
             <td data-sort="{{ $rule->data }}" style="white-space: nowrap;">
                 {{ $rule->data ? $rule->data->format('d/m/Y') : '' }}
@@ -48,7 +47,6 @@
             </td>
             <td>{{ $rule->tipo }}</td> 
         </tr>
-        @endif
         @endforeach
     </tbody>
 </table>

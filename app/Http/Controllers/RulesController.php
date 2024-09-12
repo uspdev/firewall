@@ -49,8 +49,13 @@ class RulesController extends Controller
         Gate::authorize('admin');
         $connectionStatus = Pfsense::status();
         if($connectionStatus['status']){
+            $rules = Pfsense::listarRegras();
+            $filteredRules = $rules->filter(function ($rule) {
+                return !empty($rule->codpes);
+            });
+
             return view('allRules', [
-                'rules' => Pfsense::listarRegras(),
+                'rules' => $filteredRules,
             ]);
         } else{
             return view('conectividade', [
