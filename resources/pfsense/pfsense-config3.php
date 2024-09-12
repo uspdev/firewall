@@ -70,7 +70,7 @@ if ($filter) {
     }
 }
 
-write_config();
+write_config('uspdev-firewall config update');
 send_event('filter reload');
 
 echo 'ok';

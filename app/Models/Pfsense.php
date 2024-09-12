@@ -110,6 +110,15 @@ class Pfsense extends Model
     }
 
     /**
+     * Mostra o ultimo registro de log
+     */
+    public static function showLastLog()
+    {
+        $file = escapeshellarg(storage_path("logs/pfsense.log"));
+        return `tail -n 1 $file`;
+    }
+
+    /**
      * Copia o arquivo de playback para o pfsense
      */
     public static function copiaPlaybackParaRemoto()
@@ -341,7 +350,7 @@ class Pfsense extends Model
      * 
      * Deveria esta numa classe de utils???
      */
-    protected static function toObj(Array $arr)
+    protected static function toObj(array $arr)
     {
         return json_decode(json_encode($arr));
     }
