@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Pfsense;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -20,28 +19,16 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-/**
- * Ao atualizar o código do script, tem de atualizar os remotos. 
- * 
- * Ou fazer uma detecção automatica para atualizar.
- * ou a cada update roda o atualizar remoto para garantir.
- * ainda tem o caso de HA que precisa atualizar no secundário.
- */
+// esse codigo foi passado para a classe Pfsense e é executado automaticamente quando necessário
+// então possivelmente poderá ser removido daqui
 Artisan::command('atualizarRemotos', function () {
-
-    // primeiro vamos verificar o status
-    $status = Pfsense::status();
-    if (!$status['status']) {
-        echo 'Status: ', $status['msg'], PHP_EOL;
-        echo Pfsense::showLastLog();
-        die();
+    if (!config('firewall.ssh')) {
+        die('Configure no .env a variável pfsense_ssh' . PHP_EOL);
     }
+    $path = base_path('resources/pfsense');
+    exec('tail -n +2 ' . $path . '/pfsense-config3.php > ' . $path . '/pfsense-config3');
+    exec('scp -i ' . storage_path('firewall.private_key') . ' '. $path . '/pfsense-config3 ' . config('firewall.ssh') . ':/etc/phpshellsessions/pfsense-config3');
+    exec('rm ' . $path . '/pfsense-config3');
+    echo 'Remotos atualizados' . PHP_EOL;
 
-    // depois vamos copiar o arquivo
-    if (Pfsense::copiaPlaybackParaRemoto()) {
-        echo 'Remoto atualizado: ', config('firewall.ssh') . PHP_EOL;
-    } else {
-        echo 'Algo deu errado!' . PHP_EOL;
-        echo Pfsense::showLastLog();
-    }
 })->purpose('Modifica e copia o arquivo para pfsense');
