@@ -156,13 +156,13 @@ class Pfsense extends Model
             $rules = SELF::listarNat($codpes);
             return $rules->merge(SELF::listarFilter($codpes));
         }
-        $rules = [];
+        $rules = collect();
         if (!empty($config->nat->rule)) {
             foreach ($config->nat->rule as &$rule) {
                 // vamos separar a descrição nas suas partes [codpes,data,descrição]
                 list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
                 $rule->tipo = 'nat'; 
-                array_push($rules, $rule); 
+                $rules->push($rule); 
             }
         }
 
@@ -174,10 +174,11 @@ class Pfsense extends Model
                 }
                 $rule->tipo = 'filter'; 
                 if (!isset($rule->{'associated-rule-id'})) { 
-                    array_push($rules, $rule); 
+                    $rules->push($rule); 
                 }
             }
         }
+        // dd($rules);
         return $rules;
     }
 
