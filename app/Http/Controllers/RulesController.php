@@ -47,6 +47,8 @@ class RulesController extends Controller
     public function allRules()
     {
         Gate::authorize('admin');
+        \UspTheme::activeUrl('allRules');
+        
         $connectionStatus = Pfsense::status();
         if ($connectionStatus['status']) {
             return view('allRules', [
@@ -86,7 +88,8 @@ class RulesController extends Controller
     public function activities()
     {
         Gate::authorize('admin');
-
+        \UspTheme::activeUrl('activities');
+        
         return view('atividades', [
             'activities' => Activity::orderBy('created_at', 'DESC')->get(),
         ]);
