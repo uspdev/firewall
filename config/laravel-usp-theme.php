@@ -2,12 +2,12 @@
 
 $menu = [
     [
-        'text' => '<i class="fas fa-history"></i> Logs',
+        'text' => '<span class="text-danger"><i class="fas fa-history"></i> Logs</span>',
         'url' => 'activities',
         'can' => 'admin'
     ],
     [
-        'text' => '<i class="fas fa-dragon"></i> Todas as regras',
+        'text' => '<span class="text-danger"><i class="fas fa-dragon"></i> Todas as regras</span>',
         'url' => 'allRules',
         'can' => 'admin'
     ],
