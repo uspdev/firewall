@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Pfsense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use \Spatie\Activitylog\Models\Activity;
-use Illuminate\Support\Facades\Auth;
 
 class RulesController extends Controller
 {
@@ -21,11 +21,11 @@ class RulesController extends Controller
         $user = Auth::user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
         $connectionStatus = Pfsense::status();
-        if($connectionStatus['status']){
+        if ($connectionStatus['status']) {
             $rules = Pfsense::listarRegras($user->codpes);
-        } else{
+        } else {
             return view('conectividade', [
-                'msg' =>  "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
+                'msg' => "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
             ]);
         }
         $lastActivity = Activity::causedBy($user)->get()->last();
@@ -48,16 +48,15 @@ class RulesController extends Controller
     {
         Gate::authorize('admin');
         $connectionStatus = Pfsense::status();
-        if($connectionStatus['status']){
+        if ($connectionStatus['status']) {
             return view('allRules', [
                 'rules' => Pfsense::listarRegras(),
             ]);
-        } else{
+        } else {
             return view('conectividade', [
-                'msg' =>  "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
+                'msg' => "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
             ]);
         }
-        
     }
 
     /**

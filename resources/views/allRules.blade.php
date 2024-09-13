@@ -18,6 +18,7 @@
             <th>Destino</th>
             <th>Alvo</th>
             <th>Criação da regra</th>
+            <th>Tipo</th>
         </tr>
     </thead>
     <tbody>
@@ -34,7 +35,9 @@
                 {{ $rule->destination->address ?? ''}}:{{ $rule->destination->port ?? '-' }}
             </td>
             <td>
-                {{ $rule->target }}:{{ $rule->{'local-port'} ?? ''}}
+                @if($rule->tipo == 'nat')  
+                    {{ $rule->target }}:{{ $rule->{'local-port'} ?? ''}}
+                @endif
             </td>
             <td>
                 @if(!empty($rule->updated))
@@ -42,6 +45,7 @@
                 em {{ date('d/m/Y', $rule->updated->time) }}
                 @endif
             </td>
+            <td>{{ $rule->tipo }}</td> 
         </tr>
         @endforeach
     </tbody>

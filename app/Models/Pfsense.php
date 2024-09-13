@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use \Carbon\Carbon;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use \Carbon\Carbon;
 
 class Pfsense extends Model
 {
@@ -14,7 +14,7 @@ class Pfsense extends Model
 
     /**
      * Retorna parametros comuns para o ssh
-     * 
+     *
      * -tt: orça alocar terminal
      * -F /dev/null: indica null para config file
      * -i: caminho para private key
@@ -30,13 +30,13 @@ class Pfsense extends Model
 
     /**
      * Retorna o status da comunicação com o pfsense
-     * 
+     *
      * True: Tudo certo
      * Erro no .env
      * Host down
      * Erro de SSH
      * Erro no pfsense - não implementado
-     * 
+     *
      * @return Array [status => true|false, msg => '']
      */
     public static function status()
@@ -60,10 +60,10 @@ class Pfsense extends Model
 
     /**
      * Retorna o código de retorno da conexão com o IP fornecido
-     * 
+     *
      * True: Conexão pode ser estabelecida
      * False: Host down
-     * 
+     *
      * @return Boolean
      */
     protected static function testarIP($enderecoIP)
@@ -71,15 +71,15 @@ class Pfsense extends Model
         $exec_string = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
         exec($exec_string, $exec_output, $exec_code);
 
-        return ($exec_code === 0)  ? true : false;
+        return ($exec_code === 0) ? true : false;
     }
 
     /**
      * Retorna o o status obtido com a tentativa de conexão ssh ao servidor fornecido
-     * 
+     *
      * True: Conexão estabelecida
      * False: Erro de SSH
-     * 
+     *
      * @return Integer
      */
     protected static function testarConectividade()
@@ -134,7 +134,7 @@ class Pfsense extends Model
             [
                 '{params}' => self::sshParams(),
                 '{src}' => $path . '/pfsense-config3',
-                '{host}' => config('firewall.ssh')
+                '{host}' => config('firewall.ssh'),
             ]
         );
         exec($exec_string, $return, $code);
@@ -152,19 +152,45 @@ class Pfsense extends Model
     public static function ListarRegras(int $codpes = null)
     {
         $config = SELF::obterConfig(true);
+
         if ($codpes) {
             $rules = SELF::listarNat($codpes);
             return $rules->merge(SELF::listarFilter($codpes));
         }
 
+        $rules = collect();
         if (!empty($config->nat->rule)) {
-            $rules = collect($config->nat->rule);
-            foreach ($rules as &$rule) {
+            foreach ($config->nat->rule as $rule) {
                 // vamos separar a descrição nas suas partes [codpes,data,descrição]
                 list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
+
+                //vamos pular se nao tiver codpes 
+                if (empty($rule->codpes)) {
+                    continue;
+                }
+
+                $rule->tipo = 'nat';
+                $rules->push($rule);
             }
-        } else {
-            $rules = collect();
+        }
+
+        if (!empty($config->filter->rule)) {
+            foreach ($config->filter->rule as $rule) {
+
+                list($rule->codpes, $rule->data, $rule->descttd) = SELF::tratarDescricao($rule->descr);
+
+                //vamos pular se nao tiver codpes ou se for regra associada a nat
+                if (empty($rule->codpes) || isset($rule->{'associated-rule-id'})) {
+                    continue;
+                }
+
+                if (empty($rule->destination->address)) {
+                    $rule->destination->address = $rule->interface;
+                }
+
+                $rule->tipo = 'filter';
+                $rules->push($rule);
+            }
         }
         return $rules;
     }
@@ -209,7 +235,7 @@ class Pfsense extends Model
             return collect();
         }
 
-        foreach (SELF::obterConfig()->filter->rule as $rule) {
+        foreach ($config->filter->rule as $rule) {
 
             if ($automaticos) {
                 # procura o codpes na descrição
@@ -288,7 +314,7 @@ class Pfsense extends Model
      * Obtém o config do firewall remoto
      *
      * Guarda na sessão, atualiza a sessão caso $atualizar = true
-     * 
+     *
      * TODO: talvez poderia guardar no cache do laravel, assim compartilha com todos os usuários
      */
     public static function obterConfig($atualizar = false)
@@ -347,7 +373,7 @@ class Pfsense extends Model
 
     /**
      * Converte array para objeto
-     * 
+     *
      * Deveria esta numa classe de utils???
      */
     protected static function toObj(array $arr)
