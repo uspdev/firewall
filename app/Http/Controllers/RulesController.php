@@ -23,6 +23,7 @@ class RulesController extends Controller
         $connectionStatus = Pfsense::status();
         if ($connectionStatus['status']) {
             $rules = Pfsense::listarRegras($user->codpes);
+            $serverInfo = Pfsense::obterConfig(true);
         } else {
             return view('conectividade', [
                 'msg' => "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
@@ -38,7 +39,7 @@ class RulesController extends Controller
         // vamos pegar as 20 ultimas atividades para mostrar para o usuário
         $activities = Activity::orderBy('created_at', 'DESC')->causedBy($user)->take(20)->get();
 
-        return view('index', compact('user', 'rules', 'activities'));
+        return view('index', compact('user', 'rules', 'activities', 'serverInfo'));
     }
 
     /**
@@ -91,7 +92,7 @@ class RulesController extends Controller
         \UspTheme::activeUrl('activities');
         
         return view('atividades', [
-            'activities' => Activity::orderBy('created_at', 'DESC')->get(),
+            'activities' => Activity::orderBy('created_at', 'DESC')->take(1000)->get(),
         ]);
     }
 }

@@ -4,11 +4,9 @@
 
 <div class="h4 form-inline">
     Todas as regras
-    <span class="badge badge-pill badge-primary datatable-counter ml-2">-</span>
-    @include('partials.datatables-filterbox')
 </div>
 
-<table class="table table-stripped table-sm table-bordered regras">
+<table class="table datatable-simples dt-fixed-header responsive table-stripped table-sm table-bordered regras">
     <thead>
         <tr>
             <th>Data</th>
@@ -51,25 +49,4 @@
     </tbody>
 </table>
 
-@endsection
-
-@section('javascripts_bottom')
-@parent
-<script>
-    $(document).ready(function() {
-        oTable = $('.regras').DataTable({
-            dom: 't'
-            , "paging": false
-            , "sort": true
-            , "order": [
-                [0, "desc"]
-            ]
-        })
-
-        // vamos renderizar o contador de linhas
-        $('.datatable-counter').html(oTable.page.info().recordsDisplay)
-
-    })
-
-</script>
 @endsection

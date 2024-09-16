@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-  <div class="h3">
-    Endereço IP atual: {{ $user->ip }}<br>
-  </div>
+  @can('admin')
+    @include('partials.serverinfo')
+  @endcan
   <br>
   @include('partials.rules')
   <br>

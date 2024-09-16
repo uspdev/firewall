@@ -4,10 +4,8 @@
 
 <div class="h4 form-inline">
     Registro de atividades
-    <span class="badge badge-pill badge-primary datatable-counter ml-2">-</span>
-    @include('partials.datatables-filterbox')
 </div>
-<table class="table table-stripped table-sm table-bordered atividades">
+<table class="table datatable-simples dt-fixed-header responsive table-stripped table-sm table-bordered atividades">
     <thead>
         <tr>
             <th>Data</th>
@@ -32,24 +30,4 @@
     @endforelse
 </table>
 
-@endsection
-
-@section('javascripts_bottom')
-@parent
-<script>
-    $(document).ready(function() {
-        oTable = $('.atividades').DataTable({
-            dom: 't'
-            , "paging": false
-            , "sort": true
-            , "order": [
-                [0, "desc"]
-            ]
-        })
-
-        // vamos renderizar o contador de linhas
-        $('.datatable-counter').html(oTable.page.info().recordsDisplay)
-    })
-
-</script>
 @endsection
