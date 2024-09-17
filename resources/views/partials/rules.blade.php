@@ -7,29 +7,29 @@
     }
   </style>
 @endsection
-<div class="card" id="card-rules">
+
+<div class="card mt-3" id="card-rules">
   <div class="card-header h4">
-    Regras de acesso - Endereço IP atual: {{ $user->ip }}<br>
+    Regras de acesso - Seu endereço IP atual: <span class="text-primary">{{ $user->ip }}</span>
   </div>
   <div class="card-body">
     <table class="table table-stripped table-sm table-bordered table-hover">
       <thead>
         <tr>
-          <td>Atualização</td>
-          <td>Origem</td>
-          <td>Destino</td>
-          <td>Alvo</td>
-          <td>Descrição</td>
-          <td></td>
+          <th>Atualização</th>
+          <th>Origem</th>
+          <th>Destino</th>
+          <th>Alvo</th>
+          <th>Descrição</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
-        {{-- @dd($rules) --}}
         @foreach($rules as $rule)
           <tr>
             <td>{{ $rule->data ? $rule->data->format('d/m/Y') : '' }}</td>
             <td>{{ $rule->source->address }}</td>
-            <td>{{ $rule->destination->address ?? '' }}:{{ $rule->destination->port ?? '-' }}</td>
+            <td><b>{{ $rule->destination->address ?? '' }}:{{ $rule->destination->port ?? '-' }}</b></td>
             <td>
               @if($rule->tipo == 'nat')
                 {{ $rule->target }}:{{ $rule->{'local-port'} ?? '' }}

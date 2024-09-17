@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card mt-3">
   <div class="card-header h4 mb-3">Registro de atividades</div>
   <div class="card-body">
     <table class="table datatable-simples responsive table-stripped table-sm table-bordered table-hover mb-3">
@@ -22,4 +22,3 @@
     </table>
   </div>
 </div>
-

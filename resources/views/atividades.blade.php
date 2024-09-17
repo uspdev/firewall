@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="h4 form-inline">
+<div class="h4">
   Registro de atividades
 </div>
 <table class="table datatable-simples dt-fixed-header responsive table-stripped table-sm table-bordered atividades">

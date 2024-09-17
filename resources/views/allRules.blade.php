@@ -20,7 +20,6 @@
     </tr>
   </thead>
   <tbody>
-    {{-- @dd($rules) --}}
     @foreach($rules as $rule)
       <tr>
         <td data-sort="{{ $rule->data }}" style="white-space: nowrap;">
