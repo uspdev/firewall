@@ -23,7 +23,11 @@ class RulesController extends Controller
         $connectionStatus = Pfsense::status();
         if ($connectionStatus['status']) {
             $rules = Pfsense::listarRegras($user->codpes);
-            $serverInfo = Pfsense::obterConfig(true);
+            $config = Pfsense::obterConfig(true);
+            $serverInfo = $config;
+            $serverInfo->interfaces = collect($config->interfaces)->sortBy('descr');
+            $serverInfo->virtualip->vip = collect($config->virtualip->vip)->sortBy('descr');
+            
         } else {
             return view('conectividade', [
                 'msg' => "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],

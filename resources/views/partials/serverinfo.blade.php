@@ -16,7 +16,9 @@
   <div class="card-body">
     <div class="row">
       <div class="col">
-        <div>Nome: <strong>{{ $serverInfo->system->hostname }}.{{ $serverInfo->system->domain }}</strong></div>
+        {{-- <div>Nome: <br>
+          <strong class="ml-2">{{ $serverInfo->system->hostname }}.{{ $serverInfo->system->domain }}</strong>
+        </div> --}}
         <div>Versão: <strong>{{ $serverInfo->version }}</strong></div>
       </div>
       <div class="col">
