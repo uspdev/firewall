@@ -15,7 +15,7 @@
           <td>{{ $activity->created_at->format('d/m/Y H:i') }}</td>
           <td>{{ $activity->description }}</td>
           <td>{{ $activity->getExtraProperty('agent')['ip'] ?? '' }}</td>
-          <td>{{ App\Models\Pfsense::tratarDescricao($activity->getExtraProperty('descr'))[2] }}</td>
+          <td>{{ App\Services\Pfsense::tratarDescricao($activity->getExtraProperty('descr'))[2] }}</td>
         </tr>
       @empty
       @endforelse

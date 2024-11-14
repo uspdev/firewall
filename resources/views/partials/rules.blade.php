@@ -10,7 +10,7 @@
 
 <div class="card mt-3" id="card-rules">
   <div class="card-header h4">
-    Regras de acesso - Seu endereço IP atual: <span class="text-primary">{{ $user->ip }}</span>
+    Regras de acesso - endereço IP atual: <span class="text-primary">{{ $user->ip }}</span>
   </div>
   <div class="card-body">
     <table class="table table-stripped table-sm table-bordered table-hover">

@@ -13,3 +13,13 @@
 @include('laravel-usp-theme::blocos.datatable-simples')
 
 {{-- Fim de blocos do laravel-usp-theme --}}
+
+@section('styles')
+@parent
+  <style>
+    .card-header {
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+  </style>
+@endsection

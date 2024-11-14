@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Pfsense;
+use App\Services\Pfsense;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 

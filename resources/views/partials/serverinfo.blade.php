@@ -9,10 +9,10 @@
 @endsection
 
 <div class="card" id="card-server">
-  <h4 class="card-header">
-    <span class="text-danger">Servidor remoto</span>
-    <b>{{ $serverInfo->system->hostname }}.{{ $serverInfo->system->domain }}</b>
-  </h4>
+  <div class="card-header h4">
+    <span class="text-danger">Servidor:</span>
+    <b>{{ $serverInfo->system->hostname }}.{{ $serverInfo->system->domain }} ({{ config('firewall.ssh') }})</b>
+  </div>
   <div class="card-body">
     <div class="row">
       <div class="col">

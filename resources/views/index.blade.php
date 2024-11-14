@@ -1,9 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-  @can('admin')
-    @include('partials.serverinfo')
-  @endcan
+  @includeWhen(Gate::check('admin'),'partials.serverinfo')
   @include('partials.rules')
   @include('partials.activity')
 @endsection
