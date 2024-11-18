@@ -71,7 +71,12 @@ class Pfsense
         $exec_string = sprintf('ping -c 1 -W 1 %s', $enderecoIP);
         exec($exec_string, $exec_output, $exec_code);
 
-        return ($exec_code === 0) ? true : false;
+        if ($exec_code === 0) {
+            return true;
+        } else {
+            self::log($exec_string, $exec_output, $exec_code);
+            return false;
+        }
     }
 
     /**
