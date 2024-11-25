@@ -16,7 +16,8 @@ class RulesController extends Controller
     public function index(Request $request)
     {
         if (!Gate::allows('user')) {
-            return view('nologin');
+            $ip = $request->ip();
+            return view('nologin', compact('ip'));
         }
         $user = Auth::user();
         $user->ip = $_SERVER['REMOTE_ADDR'];
