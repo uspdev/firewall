@@ -44,4 +44,6 @@ Artisan::command('atualizarRemotos', function () {
         echo 'Algo deu errado!' . PHP_EOL;
         echo Pfsense::showLastLog();
     }
+    Pfsense::copiaWidgetParaRemoto();
+    
 })->purpose('Modifica e copia o arquivo para pfsense');

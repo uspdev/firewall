@@ -152,6 +152,36 @@ class Pfsense
     }
 
     /**
+     * Copia o widget que mostra todos os ips associados ao pfsense
+     * 
+     * Depois é necessário exibir o widget na interface
+     */
+    public static function copiaWidgetParaRemoto()
+    {
+        // com barra no final
+        $src_path = base_path('resources/pfsense/www/widgets/');
+        $dst_path = '/usr/local/www/widgets/widgets/';
+
+        $arq = 'Virtual_IPs.widget.php';
+
+        // copia o arquivo
+        $exec_string = strtr(
+            'scp {params} {src} {host}:{dst} 2>&1',
+            [
+                '{params}' => self::sshParams(),
+                '{src}' => $src_path . $arq,
+                '{host}' => config('firewall.ssh'),
+                '{dst}' => $dst_path,
+            ]
+        );
+        // echo $exec_string;
+        exec($exec_string, $return, $code);
+
+        self::log('Copiou ' . $arq . ': ' . $exec_string, $return, $code);
+        return ($code === 0) ? true : false;
+    }
+
+    /**
      * Lista todas as regras ou por codpes
      */
     public static function ListarRegras(int $codpes = null)
