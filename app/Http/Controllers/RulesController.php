@@ -15,6 +15,11 @@ class RulesController extends Controller
      */
     public function index(Request $request)
     {
+        $userAgent = $request->userAgent();
+        if (str_contains(strtolower($userAgent), 'curl') || str_contains(strtolower($userAgent), 'wget')) {
+            return response($request->ip() . PHP_EOL);
+        }
+
         if (!Gate::allows('user')) {
             $ip = $request->ip();
             return view('nologin', compact('ip'));
@@ -28,7 +33,6 @@ class RulesController extends Controller
             $serverInfo = $config;
             $serverInfo->interfaces = collect($config->interfaces)->sortBy('descr');
             $serverInfo->virtualip->vip = collect($config->virtualip->vip)->sortBy('descr');
-            
         } else {
             return view('conectividade', [
                 'msg' => "Impossível acessar o servidor SSH: " . $connectionStatus['msg'],
@@ -54,7 +58,7 @@ class RulesController extends Controller
     {
         Gate::authorize('admin');
         \UspTheme::activeUrl('allRules');
-        
+
         $connectionStatus = Pfsense::status();
         if ($connectionStatus['status']) {
             return view('allRules', [
@@ -95,7 +99,7 @@ class RulesController extends Controller
     {
         Gate::authorize('admin');
         \UspTheme::activeUrl('activities');
-        
+
         return view('atividades', [
             'activities' => Activity::orderBy('created_at', 'DESC')->take(1000)->get(),
         ]);
