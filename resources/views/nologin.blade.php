@@ -2,5 +2,5 @@
 @section('content')
 Autentique-se para acessar o sistema!<br>
 <br>
-Seu atual é {{ $ip }} (meuip)
+Seu IP atual é {{ $ip }}.
 @endsection
